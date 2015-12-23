@@ -3,9 +3,9 @@
 import sys
 from numpy import array, loadtxt
 import re
-from matplotlib.pyplot import plot, show, legend, savefig, xlabel, ylabel, title
+from matplotlib.pyplot import plot, show, legend, savefig, xlabel, ylabel, title, errorbar
 import argparse
-
+from Interpolation import *
 
 datare = re.compile(r"[\w\.\+-]+")
 
@@ -22,6 +22,8 @@ def main():
     parser.add_argument('-ylabel', help='set y label', type=str)
     parser.add_argument('-title', help='set title', type=str)
     parser.add_argument('-f', help='load from file', type=str)
+    parser.add_argument('-e', help='with error bar', action='store_true')
+    parser.add_argument('-Inter', help='Interpolation', action='store_true')
 
     args = parser.parse_args()
 
@@ -43,26 +45,66 @@ def main():
     if args.title:
         title(args.title)
 
-    if args.name and args.style:
-        for i in range(1, len(dataarr[1, :])):
-            plot(dataarr[:, 0], dataarr[:, i], args.style,
-                 label=args.name[i-1])
-        legend()
-    elif args.name:
-        for i in range(1, len(dataarr[1, :])):
-            plot(dataarr[:, 0], dataarr[:, i], "--o", label=args.name[i-1])
-        legend()
-    elif args.style:
-        for i in range(1, len(dataarr[1, :])):
-            plot(dataarr[:, 0], dataarr[:, i], args.style)
-    else:
-        for i in range(1, len(dataarr[1, :])):
-            plot(dataarr[:, 0], dataarr[:, i], "--o")
+    if args.Inter:
+        if args.e is not True:
+            N = 2
+        else:
+            N = 3
+        for i in range(len(dataarr[1, :])/N):
+            data = dataarr[:, i*N:i*N+2]
+            m = min(data[:, 0])
+            M = max(data[:, 0])
+            A = Interpolator(
+                data, Neivlle, 100, [m, M]
+            )
+            plot(A.X, A.Y, "--")
 
-    if not args.save:
-        show()
+    if args.e is not True:
+        if args.name and args.style:
+            for i in range(len(dataarr[1, :])/2):
+                plot(dataarr[:, i*2], dataarr[:, i*2+1], args.style,
+                     label=args.name[i-1])
+            legend()
+        elif args.name:
+            for i in range(len(dataarr[1, :])/2):
+                plot(dataarr[:, i*2], dataarr[:, i*2+1],
+                     "--o", label=args.name[i-1])
+            legend()
+        elif args.style:
+            for i in range(len(dataarr[1, :])/2):
+                plot(dataarr[:, i*2], dataarr[:, i*2+1], args.style)
+        else:
+            for i in range(len(dataarr[1, :])/2):
+                plot(dataarr[:, i*2], dataarr[:, i*2+1], "--o")
+
+        if not args.save:
+            show()
+        else:
+            savefig(args.save)
     else:
-        savefig(args.save)
+        if args.name and args.style:
+            for i in range(len(dataarr[1, :])/3):
+                errorbar(dataarr[:, i*3], dataarr[:, i*3+1], fmt=args.style,
+                    label=args.name[i-1], yerr=dataarr[:, i*3+2])
+            legend()
+        elif args.name:
+            for i in range(len(dataarr[1, :])/3):
+                errorbar(dataarr[:, i*3], dataarr[:, i*3+1],
+                    "--o", label=args.name[i-1], yerr=dataarr[:, i*3+2])
+            legend()
+        elif args.style:
+            for i in range(len(dataarr[1, :])/3):
+                errorbar(dataarr[:, i*3], dataarr[:, i*3+1], fmt=args.style,
+                     yerr=dataarr[:, i*3+2])
+        else:
+            for i in range(len(dataarr[1, :])/3):
+                errorbar(dataarr[:, i*3], dataarr[:, i*3+1], "--o",
+                    yerr=dataarr[:, i*3+2])
+
+        if not args.save:
+            show()
+        else:
+            savefig(args.save)
 
 if __name__ == '__main__':
     main()
