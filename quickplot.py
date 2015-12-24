@@ -5,7 +5,7 @@ from numpy import array, loadtxt
 import re
 from matplotlib.pyplot import plot, show, legend, savefig, xlabel, ylabel, title, errorbar
 import argparse
-from Interpolation import *
+import Interpolation
 
 datare = re.compile(r"[\w\.\+-]+")
 
@@ -23,7 +23,8 @@ def main():
     parser.add_argument('-title', help='set title', type=str)
     parser.add_argument('-f', help='load from file', type=str)
     parser.add_argument('-e', help='with error bar', action='store_true')
-    parser.add_argument('-Inter', help='Interpolation', action='store_true')
+    parser.add_argument('-Inter', help='Interpolation', type=str,
+                        choices=['Neivlle', 'Lagrange', 'Newton', 'Linear'])
 
     args = parser.parse_args()
 
@@ -54,8 +55,8 @@ def main():
             data = dataarr[:, i*N:i*N+2]
             m = min(data[:, 0])
             M = max(data[:, 0])
-            A = Interpolator(
-                data, Neivlle, 100, [m, M]
+            A = Interpolation.Interpolator(
+                data, getattr(Interpolation, args.Inter), 100, [m, M]
             )
             plot(A.X, A.Y, "--")
 
